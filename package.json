@@ -9,24 +9,35 @@
   "dependencies": {
     "dotenv": "^16.0.2",
     "express": "^4.18.1",
+    "module-alias": "^2.2.2",
     "nodemon": "^2.0.19",
     "ts-node": "^10.9.1",
     "typescript": "^4.8.3"
   },
   "devDependencies": {
     "@types/express": "^4.17.13",
-    "@types/node": "^18.7.15"
+    "@types/node": "^18.7.15",
+    "cross-env": "^7.0.3",
+    "jest": "^29.3.1",
+    "npm-run-all": "^4.1.5",
+    "ts-alias": "^0.0.5"
   },
   "scripts": {
     "test": "jest",
-    "dev": "npx ts-node libs/cli/serve.ts",
+    "dev": "npx ts-node src/@libs/cli/serve.ts",
     "watch": "concurrently \"npx tsc --watch\" \"nodemon src/index.ts\"",
-    "build": "npx tsc",
+    "build:clean": "rm -R dist",
+    "build:copy_nodemodules": "mkdir dist/layers_nodejs; mkdir dist/layers_nodejs/nodejs;  cp package.json dist/layers_nodejs/nodejs/package.json; cp -R ./node_modules dist/layers_nodejs/nodejs",
+    "build:tsc": "npx tsc",
+    "build": "npm-run-all build:clean build:tsc build:copy_nodemodules",
     "start": "node dist/index.js"
   },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/slash-venture-pte/slash-nodejs-api-boilerplate.git"
+  },
+  "_moduleAliases": {
+    "/opt/@libs": "./@libs"
   },
   "author": "",
   "license": "ISC",

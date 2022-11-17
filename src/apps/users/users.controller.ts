@@ -1,7 +1,7 @@
-import { BaseController, WithControllerMethod } from '../../libs/mvc/controller';
-import { Router, Method } from '../../libs/annotations/routerConfig';
-import {  Controller } from '../../libs/annotations/controllerConfig';
-import { BaseResponse, ControllerResponse } from '../../libs/mvc/response';
+import { BaseController, WithControllerMethod } from '/opt/@libs/mvc/controller';
+import { Router, Method } from '/opt/@libs/annotations/routerConfig';
+import {  Controller } from '/opt/@libs/annotations/controllerConfig';
+import { BaseResponse, ControllerResponse } from '/opt/@libs/mvc/response';
 import { Request, Response } from 'express';
 
 @Controller({ name: 'User Controller', prefix: '/users'})

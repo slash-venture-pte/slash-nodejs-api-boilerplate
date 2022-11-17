@@ -2,8 +2,8 @@ import path from 'path';
 import { CoreServer } from '../mvc/server';
 
 // Start importing controllers
-import TodoController from '../../apps/todos/todo.controller';
-import UserController from '../../apps/users/users.controller';
+import TodoController from '../../../apps/todos/todo.controller';
+import UserController from '../../../apps/users/users.controller';
 
 
 const server = new CoreServer;

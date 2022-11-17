@@ -11,6 +11,8 @@ Terraform scripts:
 
 ```sh
 
+yarn install --production
+
 yarn build
 
 cd infra/apps/todos
