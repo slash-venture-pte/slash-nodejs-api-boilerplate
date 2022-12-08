@@ -26,18 +26,14 @@
     "test": "jest",
     "dev": "npx ts-node src/@libs/cli/serve.ts",
     "watch": "concurrently \"npx tsc --watch\" \"nodemon src/index.ts\"",
-    "build:clean": "rm -R dist",
-    "build:copy_nodemodules": "mkdir dist/layers_nodejs; mkdir dist/layers_nodejs/nodejs;  cp package.json dist/layers_nodejs/nodejs/package.json; cp -R ./node_modules dist/layers_nodejs/nodejs",
+    "build:win": "PowerShell -File build.ps1",
     "build:tsc": "npx tsc",
-    "build": "npm-run-all build:clean build:tsc build:copy_nodemodules",
+    "build": "build.sh",
     "start": "node dist/index.js"
   },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/slash-venture-pte/slash-nodejs-api-boilerplate.git"
-  },
-  "_moduleAliases": {
-    "/opt/@libs": "./@libs"
   },
   "author": "",
   "license": "ISC",

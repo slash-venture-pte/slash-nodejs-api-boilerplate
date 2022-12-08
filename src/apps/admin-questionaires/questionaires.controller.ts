@@ -5,16 +5,16 @@ import { BaseResponse, ControllerResponse } from '/opt/@libs/mvc/response';
 import { Request, Response } from 'express';
 
 @Controller({ name : 'Questionaires Controller', prefix : '/admin/questionaires'})
-class TodoController extends BaseController implements WithControllerMethod<TodoController> {
-  @Router({method: Method.POST, path: '/', context: TodoController.getContext() })
+class AdminQuestionairesController extends BaseController implements WithControllerMethod<AdminQuestionairesController> {
+  @Router({method: Method.POST, path: '/', context: AdminQuestionairesController.getContext() })
   getUsers (req: Request, res: Response): BaseResponse {
     const response = new ControllerResponse;
     response.statusCode = 200;
     response.response = {
-      message: 'Created Questionaires'
+      message: 'Created Questionaires2'
     };
     return response;
   }
 }
 
-export default TodoController;
+export default AdminQuestionairesController;

@@ -21,7 +21,7 @@ cd infra/apps/admin-questionaires
 terraform init
 
 # Plan it
-terraform plan
+terraform plan -out plan.tfplan
 
 # apply with variables
 # resources: https://dev.classmethod.jp/articles/i-tried-4-different-ways-to-assign-variable-in-terraform/
@@ -29,6 +29,14 @@ terraform plan
 # terraform apply -var-file="main.tfvars"
 
 # Terraform apply
-terraform apply
+terraform apply "plan.tfplan"
 
 ```
+
+## Create role permissions for your IAM access key and secret properly
+
+Needed:
+
+- Lambda
+- API Gateway
+- Execute role

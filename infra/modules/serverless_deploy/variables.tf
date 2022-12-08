@@ -1,32 +1,5 @@
 # Input variable definitions
 
-# variable "aws_region" {
-#   description = "AWS region for all resources."
-
-#   type    = string
-#   default = "ap-southeast-1"
-# }
-
-# variable "serverless_conf" {
-#   # provider = object({
-#   #   region = string
-#   # })
-#   type = object({
-#      provider = object({
-#       region = string
-#       runtime = string
-#      })
-#     application = object({
-#       name = string
-#       path = string
-#      })
-#      function = object({
-#       name = string
-#       handler = string
-#      })
-#   })
-# }
-
 variable "general" {
   type = object({
     region = string,
@@ -51,10 +24,26 @@ variable "application" {
 variable "function" {
   type = object({
     name = string,
-    handler = string
+    handler = string,
+    method = string
   })
   default = {
     name = "TodosWebAPI",
     handler = "index.handler"
+    method = "POST"
+  }
+}
+variable "apigateway" {
+  type = object({
+    arn = string,
+    restid = string,
+    count = number,
+    stage = string
+  })
+  default = {
+    arn = "",
+    restid = "",
+    count = 0
+    stage = ""
   }
 }

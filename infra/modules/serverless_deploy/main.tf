@@ -80,7 +80,7 @@ resource "aws_s3_object" "lambda_archive_upload" {
 #  More : https://github.com/rahman95/terraform-lambda-typescript-starter/blob/master/terraform/lambda.tf
 
 resource "aws_lambda_function" "lambda_handler" {
-  function_name = var.function.name
+  function_name = "${var.application.name}-${var.function.name}-${var.apigateway.stage}"
 
   depends_on = [
     aws_s3_bucket.lambda_bucket,
@@ -103,6 +103,12 @@ resource "aws_lambda_function" "lambda_handler" {
   source_code_hash = "${filebase64sha256(data.archive_file.lambda_archive.output_path)}"
 }
 
+resource "aws_cloudwatch_log_group" "lambda_handler" {
+  name = "/aws/lambda/${aws_lambda_function.lambda_handler.function_name}"
+
+  retention_in_days = 30
+}
+
 # IAM role which dictates what other AWS services the Lambda function
 # may access.
 resource "aws_iam_role" "lambda_exec" {
@@ -119,8 +125,51 @@ resource "aws_iam_role" "lambda_exec" {
       },
       "Effect": "Allow",
       "Sid": ""
+    },
+    {
+      "Action": "sts:AssumeRole",
+      "Principal": {
+        "Service": "lambda.amazonaws.com"
+      },
+      "Effect": "Allow",
+      "Sid": "" 
     }
   ]
 }
 EOF
+}
+
+resource "aws_iam_role_policy_attachment" "lambda_policy" {
+  role       = aws_iam_role.lambda_exec.name
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+}
+
+resource "aws_apigatewayv2_integration" "lambda_handler" {
+  count = var.apigateway.count
+
+  api_id = var.apigateway.restid
+
+  integration_uri    = aws_lambda_function.lambda_handler.invoke_arn
+  integration_type   = "AWS_PROXY"
+  integration_method = "POST"
+}
+
+resource "aws_apigatewayv2_route" "lambda_handler" {
+  count = length(aws_apigatewayv2_integration.lambda_handler)
+
+  api_id = var.apigateway.restid
+
+  route_key = "${var.function.method} /${var.application.path}"
+  target    = "integrations/${one(aws_apigatewayv2_integration.lambda_handler[*].id)}"
+}
+
+resource "aws_lambda_permission" "api_gw" {
+  count = length(aws_apigatewayv2_integration.lambda_handler)
+
+  statement_id  = "AllowExecutionFromAPIGateway"
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.lambda_handler.function_name
+  principal     = "apigateway.amazonaws.com"
+
+  source_arn = "${var.apigateway.arn}/*/*"
 }
