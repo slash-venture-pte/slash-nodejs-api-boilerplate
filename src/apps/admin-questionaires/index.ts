@@ -1,5 +1,5 @@
 import 'module-alias/register';
-import * as controller from './todo.controller';
+import * as controller from './questionaires.controller';
 
 console.log('testr');
 

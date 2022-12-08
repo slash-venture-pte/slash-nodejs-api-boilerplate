@@ -3,7 +3,7 @@ terraform {
   required_providers {
     aws = {
       source  = "hashicorp/aws"
-      version = "~> 4.0.0"
+      version = "4.45.0"
     }
     random = {
       source  = "hashicorp/random"
@@ -19,11 +19,11 @@ terraform {
 }
 
 provider "aws" {
-  region = var.serverless_conf.provider.region
+  region = var.general.region
 }
 
 resource "aws_s3_bucket" "lambda_bucket" {
-  bucket = lower("${var.serverless_conf.application.name}-${var.serverless_conf.function.name}-deployment-bucket")
+  bucket = lower("${var.application.name}-${var.function.name}-deployment-bucket")
 }
 
 
@@ -36,8 +36,8 @@ resource "random_uuid" "lambda_deploy_id" {
 
 data "archive_file" "lambda_archive" {
   type        = "zip"
-  source_dir  = "${path.module}/../../../dist/apps/${var.serverless_conf.application.path}"
-  output_path = "${path.module}/../../../dist/apps/${var.serverless_conf.application.path}.zip"
+  source_dir  = "${path.module}/../../../dist/apps/${var.application.path}"
+  output_path = "${path.module}/../../../dist/apps/${var.application.path}.zip"
 }
 
 # Lib layers
@@ -60,27 +60,27 @@ data "archive_file" "layer_nodemodule_archive" {
 resource "aws_lambda_layer_version" "dependency_layer" {
   filename            = data.archive_file.layer_archive.output_path
   layer_name          = "dependency_layer"
-  compatible_runtimes = [var.serverless_conf.provider.runtime]
+  compatible_runtimes = [var.general.runtime]
   source_code_hash    = "${filebase64sha256(data.archive_file.layer_archive.output_path)}"
 }
 resource "aws_lambda_layer_version" "nodemodules_layer" {
   filename            = data.archive_file.layer_nodemodule_archive.output_path
   layer_name          = "nodemodules_layer"
-  compatible_runtimes = [var.serverless_conf.provider.runtime]
+  compatible_runtimes = [var.general.runtime]
   source_code_hash    = "${filebase64sha256(data.archive_file.layer_nodemodule_archive.output_path)}"
 }
 
 # upload zip to s3 and then update lamda function from s3
 resource "aws_s3_object" "lambda_archive_upload" {
   bucket = "${aws_s3_bucket.lambda_bucket.id}"
-  key    = "${var.serverless_conf.application.name}/${random_uuid.lambda_deploy_id.result}/${var.serverless_conf.function.name}.zip"
+  key    = "${var.application.name}/${random_uuid.lambda_deploy_id.result}/${var.function.name}.zip"
   source = "${data.archive_file.lambda_archive.output_path}" # its mean it depended on zip
 
 }
 #  More : https://github.com/rahman95/terraform-lambda-typescript-starter/blob/master/terraform/lambda.tf
 
 resource "aws_lambda_function" "lambda_handler" {
-  function_name = var.serverless_conf.function.name
+  function_name = var.function.name
 
   depends_on = [
     aws_s3_bucket.lambda_bucket,
@@ -89,14 +89,14 @@ resource "aws_lambda_function" "lambda_handler" {
   layers = [aws_lambda_layer_version.dependency_layer.arn, aws_lambda_layer_version.nodemodules_layer.arn]
 
   # The bucket name as created earlier with "aws s3api create-bucket"
-  s3_bucket = aws_s3_bucket.lambda_bucket.id # ("${var.serverless_conf.application.name}-${var.serverless_conf.function.name}-bucket")
+  s3_bucket = aws_s3_bucket.lambda_bucket.id # ("${var.application.name}-${var.function.name}-bucket")
   s3_key    = aws_s3_object.lambda_archive_upload.key
 
   # "main" is the filename within the zip file (main.js) and "handler"
   # is the name of the property under which the handler function was
   # exported in that file.
-  handler = "${var.serverless_conf.function.handler}"
-  runtime = "${var.serverless_conf.provider.runtime}"
+  handler = "${var.function.handler}"
+  runtime = "${var.general.runtime}"
 
   role = "${aws_iam_role.lambda_exec.arn}"
 
@@ -106,7 +106,7 @@ resource "aws_lambda_function" "lambda_handler" {
 # IAM role which dictates what other AWS services the Lambda function
 # may access.
 resource "aws_iam_role" "lambda_exec" {
-  name = "${var.serverless_conf.function.name}-role"
+  name = "${var.function.name}-role"
 
   assume_role_policy = <<EOF
 {

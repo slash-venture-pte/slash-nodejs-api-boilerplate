@@ -5,7 +5,7 @@ Terraform:
 
 ## Example: TODOS
 
-Path: apps/todos/infra
+Path of the infra: `infra/apps/admin-questionaires`
 
 Terraform scripts:
 
@@ -15,14 +15,20 @@ yarn install --production
 
 yarn build
 
-cd infra/apps/todos
+cd infra/apps/admin-questionaires
 
+# Init it first
 terraform init
+
+# Plan it
+terraform plan
 
 # apply with variables
 # resources: https://dev.classmethod.jp/articles/i-tried-4-different-ways-to-assign-variable-in-terraform/
+# when needed to add the var file?
+# terraform apply -var-file="main.tfvars"
 
-terraform apply -var-file="lambda.tfvars"
-
+# Terraform apply
+terraform apply
 
 ```
