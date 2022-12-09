@@ -1,12 +1,7 @@
 import 'module-alias/register';
-import * as controller from './questionaires.controller';
+import AdminQuestionairesController from './questionaires.controller';
+import wrapper from '/opt/@libs/serverless/wrapper';
 
-console.log('testr');
+console.log('testr', AdminQuestionairesController, wrapper);
 
-export {
-  controller
-};
-
-export const handler = () => {
-  return {};
-}
+export const handler = wrapper(AdminQuestionairesController);

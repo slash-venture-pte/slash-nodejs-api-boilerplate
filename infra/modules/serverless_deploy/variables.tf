@@ -14,23 +14,23 @@ variable "general" {
 variable "application" {
   type = object({
     name = string,
-    path = string
+    path = string,
+    uri = string
   })
   default = {
     name = "TodoApps"
     path = "todos"
+    uri = ""
   }
 }
 variable "function" {
   type = object({
     name = string,
-    handler = string,
-    method = string
+    handler = string
   })
   default = {
     name = "TodosWebAPI",
     handler = "index.handler"
-    method = "POST"
   }
 }
 variable "apigateway" {
@@ -38,12 +38,14 @@ variable "apigateway" {
     arn = string,
     restid = string,
     count = number,
-    stage = string
+    stage = string,
+    root_resource_id = string
   })
   default = {
     arn = "",
     restid = "",
     count = 0
-    stage = ""
+    stage = "",
+    root_resource_id = ""
   }
 }

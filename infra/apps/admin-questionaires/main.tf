@@ -32,16 +32,17 @@ module serverless_deploy {
   application = {
     name = "slash-assessment"
     path = "admin-questionaires"
+    uri = "v1"
   }
   function = {
     name = "manageQuestionaires",
     handler = "index.handler"
-    method = "GET"
   }
   apigateway = {
     arn = module.api_gateway.apigateway_arn
     count = 1
     restid = module.api_gateway.apigateway_id
+    root_resource_id = module.api_gateway.apigateway_root_resource_id
     stage = "dev"
   }
 }

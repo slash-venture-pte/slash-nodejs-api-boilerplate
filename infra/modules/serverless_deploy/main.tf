@@ -76,6 +76,8 @@ resource "aws_s3_object" "lambda_archive_upload" {
   key    = "${var.application.name}/${random_uuid.lambda_deploy_id.result}/${var.function.name}.zip"
   source = "${data.archive_file.lambda_archive.output_path}" # its mean it depended on zip
 
+  source_hash = "${filebase64sha256(data.archive_file.lambda_archive.output_path)}"
+
 }
 #  More : https://github.com/rahman95/terraform-lambda-typescript-starter/blob/master/terraform/lambda.tf
 
@@ -144,27 +146,85 @@ resource "aws_iam_role_policy_attachment" "lambda_policy" {
   policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
 }
 
-resource "aws_apigatewayv2_integration" "lambda_handler" {
-  count = var.apigateway.count
+# resource "aws_apigatewayv2_integration" "lambda_handler" {
+#   count = var.apigateway.count
 
-  api_id = var.apigateway.restid
+#   api_id = var.apigateway.restid
 
-  integration_uri    = aws_lambda_function.lambda_handler.invoke_arn
-  integration_type   = "AWS_PROXY"
-  integration_method = "POST"
+#   # https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/apigatewayv2_route
+#   integration_uri    = "${var.apigateway.endpoint}/${var.apigateway.stage}/${var.application.uri}/{proxy}"
+#   integration_type   = "HTTP_PROXY"
+#   integration_method = "ANY"
+ 
+# }
+
+# resource "aws_apigatewayv2_route" "lambda_handler_root" {
+#   count = length(aws_apigatewayv2_integration.lambda_handler)
+
+#   api_id = var.apigateway.restid
+
+#   route_key = "ANY /"
+#   target    = "integrations/${one(aws_apigatewayv2_integration.lambda_handler[*].id)}"
+# }
+
+# resource "aws_apigatewayv2_route" "lambda_handler" {
+#   count = length(aws_apigatewayv2_integration.lambda_handler)
+
+#   api_id = var.apigateway.restid
+
+#   route_key = "ANY /${var.apigateway.stage}/${var.application.uri}/{proxy+}"
+#   target    = "integrations/${one(aws_apigatewayv2_integration.lambda_handler[*].id)}"
+# }
+resource "aws_api_gateway_resource" "proxy" {
+  rest_api_id = "${var.apigateway.restid}"
+  parent_id   = "${var.apigateway.root_resource_id}"
+  path_part   = "{proxy+}"
 }
 
-resource "aws_apigatewayv2_route" "lambda_handler" {
-  count = length(aws_apigatewayv2_integration.lambda_handler)
+resource "aws_api_gateway_method" "proxy" {
+  rest_api_id = "${var.apigateway.restid}"
+  resource_id      = "${aws_api_gateway_resource.proxy.id}"
+  http_method   = "ANY"
+  authorization = "NONE"
+}
+resource "aws_api_gateway_integration" "lambda" {
+  rest_api_id = "${var.apigateway.restid}"
+  resource_id = "${aws_api_gateway_method.proxy.resource_id}"
+  http_method = "${aws_api_gateway_method.proxy.http_method}"
 
-  api_id = var.apigateway.restid
+  integration_http_method = "POST"
+  type                    = "AWS_PROXY"
+  uri                     = "${aws_lambda_function.lambda_handler.invoke_arn}"
+}
 
-  route_key = "${var.function.method} /${var.application.path}"
-  target    = "integrations/${one(aws_apigatewayv2_integration.lambda_handler[*].id)}"
+# resource "aws_api_gateway_method" "proxy_root" {
+#   rest_api_id = "${var.apigateway.restid}"
+#   resource_id  = "${var.apigateway.root_resource_id}"
+#   http_method   = "ANY"
+#   authorization = "NONE"
+# }
+
+# resource "aws_api_gateway_integration" "lambda_root" {
+#   rest_api_id = "${var.apigateway.restid}"
+#   resource_id = "${aws_api_gateway_method.proxy_root.resource_id}"
+#   http_method = "${aws_api_gateway_method.proxy_root.http_method}"
+
+#   integration_http_method = "POST"
+#   type                    = "AWS_PROXY"
+#   uri                     = "${aws_lambda_function.lambda_handler.invoke_arn}"
+# }
+resource "aws_api_gateway_deployment" "lambda_apig_deploy" {
+  depends_on = [
+    aws_api_gateway_integration.lambda,
+    # aws_api_gateway_integration.lambda_root,
+  ]
+
+  rest_api_id = "${var.apigateway.restid}"
+  stage_name  = "${var.apigateway.stage}"
 }
 
 resource "aws_lambda_permission" "api_gw" {
-  count = length(aws_apigatewayv2_integration.lambda_handler)
+  # count = length(aws_api_gateway_resource.proxy)
 
   statement_id  = "AllowExecutionFromAPIGateway"
   action        = "lambda:InvokeFunction"
